@@ -1,24 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
+const API_URL = import.meta.env.VITE_API_URL;
+const socket: Socket = io(API_URL, {
+  autoConnect: true,
+});
+type Dish = {
+  dishId: string;
+  dishName: string;
+  imageUrl: string;
+  isPublished: boolean;
+};
+
 function App() {
-  const [dishes, setDishes] = useState([]);
+  const [dishes, setDishes] = useState<Dish[]>([]);
   const [loading, setLoading] = useState(true);
-  const API_URL = import.meta.env.VITE_API_URL;
-  const socket = io(API_URL);
-  const fetchDishes = async () => {
-    try {
-      const res = await axios.get(`${API_URL}/api/dishes`);
 
-      setDishes(res.data.data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleStatus = async (dishId) => {
+  const toggleStatus = async (dishId: string) => {
     try {
       await axios.patch(`${API_URL}/api/dishes/${dishId}/toggle`);
     } catch (err) {
@@ -27,18 +25,33 @@ function App() {
   };
 
   useEffect(() => {
+    const fetchDishes = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/dishes`);
+
+        setDishes(res.data.data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchDishes();
   }, []);
   useEffect(() => {
-    socket.on("dishUpdated", (updatedDish) => {
+    const handleUpdate = (updatedDish: Dish) => {
       setDishes((prev) =>
         prev.map((dish) =>
           dish.dishId === updatedDish.dishId ? updatedDish : dish,
         ),
       );
-    });
+    };
 
-    return () => socket.off("dishUpdated");
+    socket.on("dishUpdated", handleUpdate);
+
+    return () => {
+      socket.off("dishUpdated", handleUpdate);
+    };
   }, []);
   if (loading) {
     return (
