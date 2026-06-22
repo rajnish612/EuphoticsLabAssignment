@@ -1,0 +1,14 @@
+[
+  {
+    "dishId": "1",
+    "dishName": "Pizza",
+    "imageUrl": "https://example.com/pizza.jpg",
+    "isPublished": true
+  },
+  {
+    "dishId": "2",
+    "dishName": "Burger",
+    "imageUrl": "https://example.com/burger.jpg",
+    "isPublished": false
+  }
+]
