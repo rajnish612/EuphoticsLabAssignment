@@ -3,7 +3,6 @@ import Dish from "../models/dish.js";
 export const getAllDishes = async (req, res) => {
   try {
     const dishes = await Dish.find();
-
     res.status(200).json({
       success: true,
       data: dishes,
@@ -32,6 +31,8 @@ export const togglePublishStatus = async (req, res) => {
     dish.isPublished = !dish.isPublished;
 
     await dish.save();
+    const io = req.app.get("io");
+    io.emit("dishUpdated", dish);
 
     res.status(200).json({
       success: true,
